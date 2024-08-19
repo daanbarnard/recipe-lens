@@ -208,7 +208,7 @@ export default function Home() {
             <li>Upload an image or take a photo of your dish or ingredients.</li>
             <li>Optionally, add dish characteristics or additional ingredients.</li>
             <li>Let our AI analyze the image to identify the recipe or create a custom recipe based on the ingredients.</li>
-            <li>View the detailed recipe, including ingredients, instructions, and nutritional information.</li>
+            <li>View the detailed recipe, including ingredients, instructions, nutritional information, and a video tutorial of the recipe.</li>
           </ol>
         </section>
 
@@ -333,6 +333,7 @@ export default function Home() {
               instructions={recipe.instructions}
               nutritionalInformation={recipe.nutritionalInformation}
               notes={recipe.notes}
+              youtubeVideoId={recipe.youtubeVideoId}
               onClose={resetApp}
             />
           </div>

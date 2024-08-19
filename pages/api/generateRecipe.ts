@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { generateRecipeFromImage, generateRecipeFromIngredients } from '../../utils/api';
+import { searchYoutubeVideo } from '../../utils/youtube';
 import axios from 'axios';
 
 const cleanText = (text: string) => text.replace(/^\d+\.\s*/, '').replace(/^\*\s*/, '').trim();
@@ -24,6 +25,7 @@ interface Recipe {
   instructions: string[];
   nutritionalInformation: string[];
   notes: string[];
+  youtubeVideoId?: string;
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -78,6 +80,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       // Process notes
       cleanedRecipe.notes = recipe.notes.map(cleanText).filter(item => item !== '');
+
+      // Search for a YouTube video
+      console.log('Searching for YouTube video:', `${cleanedRecipe.name} recipe`);
+      const youtubeVideoId = await searchYoutubeVideo(`${cleanedRecipe.name} recipe`);
+      console.log('YouTube video ID:', youtubeVideoId);
+      if (youtubeVideoId) {
+        cleanedRecipe.youtubeVideoId = youtubeVideoId;
+      }
 
       console.log('Recipe generated and cleaned successfully:', cleanedRecipe);
       res.status(200).json(cleanedRecipe);

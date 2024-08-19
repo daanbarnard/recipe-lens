@@ -23,6 +23,7 @@ export interface RecipeResponse {
   equipmentNeeded: string[];
   nutritionalInformation: string[];
   notes: string[];
+  youtubeVideoId?: string;
 }
 
 async function generateRecipe(prompt: string, imagePart?: any): Promise<RecipeResponse> {

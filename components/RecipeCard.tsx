@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaPrint, FaTimes, FaWhatsapp, FaFacebookF, FaLinkedinIn, FaEnvelope, FaAmazon } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
 
@@ -21,6 +21,24 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
   notes,
   onClose
 }) => {
+  const [youtubeVideoUrl, setYoutubeVideoUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchYoutubeVideo = async () => {
+      try {
+        const response = await fetch(`/api/youtube?query=${encodeURIComponent(name)}`);
+        if (response.ok) {
+          const data = await response.json();
+          setYoutubeVideoUrl(data.videoUrl);
+        }
+      } catch (error) {
+        console.error('Error fetching YouTube video:', error);
+      }
+    };
+
+    fetchYoutubeVideo();
+  }, [name]);
+
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
     if (printWindow) {
@@ -126,6 +144,16 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
       <div className="recipe-card-content">
         <h1 className="text-3xl font-bold mb-4 text-center">{cleanText(name)}</h1>
         
+        <div className="flex justify-center mb-6">
+          <button
+            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded inline-flex items-center"
+            onClick={handlePrint}
+          >
+            <FaPrint className="mr-2" />
+            Print Recipe
+          </button>
+        </div>
+
         <section className="mb-6">
           <h2 className="text-2xl font-semibold mb-2">Ingredients</h2>
           {renderList(ingredients, 'bullet', false, true)}
@@ -168,31 +196,36 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
           <h2 className="text-2xl font-semibold mb-2">Notes</h2>
           {renderList(notes, 'bullet')}
         </section>
+
+        {youtubeVideoUrl && (
+          <section className="mb-6">
+            <h2 className="text-2xl font-semibold mb-2">Video Tutorial</h2>
+            <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+              <iframe
+                src={youtubeVideoUrl}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="absolute top-0 left-0 w-full h-full"
+              ></iframe>
+            </div>
+          </section>
+        )}
       </div>
 
-      <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-        <button
-          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded inline-flex items-center"
-          onClick={handlePrint}
-        >
-          <FaPrint className="mr-2" />
-          Print Recipe
-        </button>
-        <div className="flex flex-col items-center space-y-2">
-          <h3 className="font-semibold">Share Recipe Lens with Friends!</h3>
-          <div className="flex space-x-2">
-            {shareLinks.map((link, index) => (
-              <a
-                key={index}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`${link.color} hover:opacity-80 text-white rounded-full p-2`}
-              >
-                <link.icon />
-              </a>
-            ))}
-          </div>
+      <div className="flex flex-col items-center space-y-4">
+        <h3 className="font-semibold">Share Recipe Lens with Friends!</h3>
+        <div className="flex justify-center space-x-2">
+          {shareLinks.map((link, index) => (
+            <a
+              key={index}
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`${link.color} hover:opacity-80 text-white rounded-full p-2`}
+            >
+              <link.icon />
+            </a>
+          ))}
         </div>
         <button
           className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded inline-flex items-center"
