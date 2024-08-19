@@ -17,6 +17,7 @@ function MyApp({ Component, pageProps }: AppProps) {
     <div className="flex flex-col min-h-screen">
       <Head>
         <link rel="icon" href="/favicon.png" />
+        <meta name="google-adsense-account" content="ca-pub-1361426623128973" />
       </Head>
       <Script
         src="https://www.googletagmanager.com/gtag/js?id=G-7YYVRBJ7J6"
