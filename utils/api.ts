@@ -1,9 +1,9 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const API_KEY = process.env.GOOGLE_API_KEY;
+const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY;
 
 if (!API_KEY) {
-  console.error('GOOGLE_API_KEY is not set in the environment variables');
+  console.error('NEXT_PUBLIC_GOOGLE_API_KEY is not set in the environment variables');
 }
 
 const genAI = new GoogleGenerativeAI(API_KEY || '');
@@ -20,7 +20,7 @@ export interface RecipeResponse {
 
 async function generateRecipe(prompt: string, imagePart?: any): Promise<RecipeResponse> {
   if (!API_KEY) {
-    throw new Error('GOOGLE_API_KEY is not set in the environment variables');
+    throw new Error('NEXT_PUBLIC_GOOGLE_API_KEY is not set in the environment variables');
   }
 
   const result = await model.generateContent(imagePart ? [prompt, imagePart] : prompt);
