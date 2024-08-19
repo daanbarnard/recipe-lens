@@ -17,6 +17,15 @@ async function verifyRecaptcha(token: string): Promise<boolean> {
   }
 }
 
+interface Recipe {
+  name: string;
+  ingredients: string[];
+  equipmentNeeded: string[];
+  instructions: string[];
+  nutritionalInformation: string[];
+  notes: string[];
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     const { type, data, recaptchaToken } = req.body;
@@ -43,7 +52,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       // Clean up and structure the recipe data
-      const cleanedRecipe = {
+      const cleanedRecipe: Recipe = {
         name: '',
         ingredients: [],
         equipmentNeeded: [],
