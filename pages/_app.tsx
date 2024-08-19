@@ -4,6 +4,7 @@ import Header from '../components/Header'
 import Footer from '../components/Footer'
 import { useState } from 'react'
 import Head from 'next/head'
+import Script from 'next/script'
 
 function MyApp({ Component, pageProps }: AppProps) {
   const [key, setKey] = useState(0)
@@ -17,6 +18,18 @@ function MyApp({ Component, pageProps }: AppProps) {
       <Head>
         <link rel="icon" href="/favicon.png" />
       </Head>
+      <Script
+        src="https://www.googletagmanager.com/gtag/js?id=G-7YYVRBJ7J6"
+        strategy="afterInteractive"
+      />
+      <Script id="google-analytics" strategy="afterInteractive">
+        {`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-7YYVRBJ7J6');
+        `}
+      </Script>
       <Header onReset={resetApp} />
       <main className="flex-grow">
         <Component {...pageProps} key={key} />
