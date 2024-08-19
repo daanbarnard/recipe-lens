@@ -108,8 +108,8 @@ export default function Home() {
     }
     setLoading(true)
     try {
-      const token = await executeRecaptcha()
-      const result = await generateRecipeFromImage(uploadedImage, characteristics, token)
+      await executeRecaptcha()
+      const result = await generateRecipeFromImage(uploadedImage, characteristics)
       setRecipe(result)
     } catch (err) {
       console.error('Failed to identify recipe:', err)
@@ -124,8 +124,8 @@ export default function Home() {
     }
     setLoading(true)
     try {
-      const token = await executeRecaptcha()
-      const result = await generateRecipeFromIngredients(uploadedImage, optionalIngredients, token)
+      await executeRecaptcha()
+      const result = await generateRecipeFromIngredients(uploadedImage, optionalIngredients)
       setRecipe(result)
     } catch (err) {
       console.error('Failed to create recipe:', err)
