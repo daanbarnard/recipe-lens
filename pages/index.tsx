@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { FaCamera, FaUpload, FaUtensils, FaList, FaPrint, FaInfoCircle, FaTimes, FaSearch, FaLightbulb, FaMobileAlt, FaRobot } from 'react-icons/fa'
 import RecipeCard from '../components/RecipeCard'
 import LoadingIcon from '../components/LoadingIcon'
-import { generateRecipeFromImage, generateRecipeFromIngredients, resizeImage } from '../utils/api'
+import { generateRecipeFromImage, generateRecipeFromIngredients, resizeImage, RecipeResponse } from '../utils/api'
 
 declare global {
   interface Window {
@@ -15,7 +15,7 @@ declare global {
 export default function Home() {
   const [showOptions, setShowOptions] = useState(false)
   const [recipeType, setRecipeType] = useState<'identify' | 'create'>('identify')
-  const [recipe, setRecipe] = useState(null)
+  const [recipe, setRecipe] = useState<RecipeResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [uploadedImage, setUploadedImage] = useState('')
   const [characteristics, setCharacteristics] = useState('')
