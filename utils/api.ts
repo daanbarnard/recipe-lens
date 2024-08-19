@@ -3,11 +3,18 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY;
 
 if (!API_KEY) {
-  console.error('NEXT_PUBLIC_GOOGLE_API_KEY is not set in the environment variables');
+  console.warn('NEXT_PUBLIC_GOOGLE_API_KEY is not set in the environment variables');
 }
 
-const genAI = new GoogleGenerativeAI(API_KEY || '');
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+let genAI: GoogleGenerativeAI | null = null;
+let model: any = null;
+
+try {
+  genAI = new GoogleGenerativeAI(API_KEY || '');
+  model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+} catch (error) {
+  console.error('Error initializing Google Generative AI:', error);
+}
 
 export interface RecipeResponse {
   name: string;
@@ -23,15 +30,24 @@ async function generateRecipe(prompt: string, imagePart?: any): Promise<RecipeRe
     throw new Error('NEXT_PUBLIC_GOOGLE_API_KEY is not set in the environment variables');
   }
 
-  const result = await model.generateContent(imagePart ? [prompt, imagePart] : prompt);
-  const response = await result.response;
-  const text = response.text();
-
-  if (!text) {
-    throw new Error('Generated text is empty');
+  if (!genAI || !model) {
+    throw new Error('Google Generative AI is not initialized');
   }
 
-  return parseRecipeResponse(text);
+  try {
+    const result = await model.generateContent(imagePart ? [prompt, imagePart] : prompt);
+    const response = await result.response;
+    const text = response.text();
+
+    if (!text) {
+      throw new Error('Generated text is empty');
+    }
+
+    return parseRecipeResponse(text);
+  } catch (error) {
+    console.error('Error generating recipe:', error);
+    throw new Error('Failed to generate recipe. Please try again.');
+  }
 }
 
 export async function generateRecipeFromImage(imageBase64: string, characteristics: string = ''): Promise<RecipeResponse> {

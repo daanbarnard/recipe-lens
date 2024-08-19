@@ -35,6 +35,7 @@ export default function Home() {
       }
       script.onerror = () => {
         console.error('Failed to load reCAPTCHA script')
+        setError('Failed to load reCAPTCHA. Please try refreshing the page.')
       }
       document.body.appendChild(script)
     }
@@ -43,8 +44,15 @@ export default function Home() {
       loadRecaptcha()
     }
 
-    console.log('NEXT_PUBLIC_GOOGLE_API_KEY:', process.env.NEXT_PUBLIC_GOOGLE_API_KEY)
-    console.log('NEXT_PUBLIC_RECAPTCHA_SITE_KEY:', process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY)
+    if (!process.env.NEXT_PUBLIC_GOOGLE_API_KEY) {
+      console.error('NEXT_PUBLIC_GOOGLE_API_KEY is not set')
+      setError('The application is not configured correctly. Please contact support.')
+    }
+
+    if (!process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY) {
+      console.error('NEXT_PUBLIC_RECAPTCHA_SITE_KEY is not set')
+      setError('The application is not configured correctly. Please contact support.')
+    }
 
     return () => {
       const script = document.querySelector('script[src^="https://www.google.com/recaptcha/api.js"]')
@@ -58,6 +66,7 @@ export default function Home() {
     setRecipeType(type)
     setShowOptions(true)
     setRecipe(null)
+    setError(null)
   }
 
   const compressImage = (file: File): Promise<string> => {
@@ -128,32 +137,44 @@ export default function Home() {
 
   const handleIdentifyRecipe = async () => {
     if (!uploadedImage) {
+      setError('Please upload an image first.')
       return
     }
     setLoading(true)
+    setError(null)
     try {
       await executeRecaptcha()
       const result = await generateRecipeFromImage(uploadedImage, characteristics)
       setRecipe(result)
     } catch (err) {
       console.error('Failed to identify recipe:', err)
-      setError('Failed to identify recipe. Please try again.')
+      if (err instanceof Error) {
+        setError(`Failed to identify recipe: ${err.message}`)
+      } else {
+        setError('Failed to identify recipe. Please try again.')
+      }
     }
     setLoading(false)
   }
 
   const handleCreateRecipe = async () => {
     if (!uploadedImage) {
+      setError('Please upload an image first.')
       return
     }
     setLoading(true)
+    setError(null)
     try {
       await executeRecaptcha()
       const result = await generateRecipeFromIngredients(uploadedImage, optionalIngredients)
       setRecipe(result)
     } catch (err) {
       console.error('Failed to create recipe:', err)
-      setError('Failed to create recipe. Please try again.')
+      if (err instanceof Error) {
+        setError(`Failed to create recipe: ${err.message}`)
+      } else {
+        setError('Failed to create recipe. Please try again.')
+      }
     }
     setLoading(false)
   }
@@ -288,8 +309,8 @@ export default function Home() {
         )}
 
         {error && (
-          <div className="mb-4 text-red-500 text-center">
-            {error}
+          <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+            <strong>Error:</strong> {error}
           </div>
         )}
 
