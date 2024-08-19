@@ -64,7 +64,8 @@ Message: ${message}
       res.status(200).json({ message: 'Email sent successfully' });
     } catch (error) {
       console.error('Error sending email:', error);
-      res.status(500).json({ error: 'Failed to send email', details: error.message });
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      res.status(500).json({ error: 'Failed to send email', details: errorMessage });
     }
   } else {
     res.setHeader('Allow', ['POST']);
