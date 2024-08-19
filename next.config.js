@@ -27,7 +27,7 @@ const nextConfig = {
         headers: [
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; connect-src 'self' https://generativelanguage.googleapis.com; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/; frame-src https://www.google.com/recaptcha/ https://www.youtube.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:;",
+            value: "default-src 'self'; connect-src 'self' https://generativelanguage.googleapis.com https://www.google-analytics.com; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://www.googletagmanager.com; frame-src https://www.google.com/recaptcha/ https://www.youtube.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:;",
           },
         ],
       },
