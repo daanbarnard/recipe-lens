@@ -9,6 +9,7 @@ interface RecipeCardProps {
   instructions: string[];
   nutritionalInformation: string[];
   notes: string[];
+  youtubeVideoId?: string;
   onClose: () => void;
 }
 
@@ -19,25 +20,30 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
   instructions,
   nutritionalInformation,
   notes,
+  youtubeVideoId,
   onClose
 }) => {
   const [youtubeVideoUrl, setYoutubeVideoUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchYoutubeVideo = async () => {
-      try {
-        const response = await fetch(`/api/youtube?query=${encodeURIComponent(name)}`);
-        if (response.ok) {
-          const data = await response.json();
-          setYoutubeVideoUrl(data.videoUrl);
+    if (youtubeVideoId) {
+      setYoutubeVideoUrl(`https://www.youtube.com/embed/${youtubeVideoId}`);
+    } else {
+      const fetchYoutubeVideo = async () => {
+        try {
+          const response = await fetch(`/api/youtube?query=${encodeURIComponent(name)}`);
+          if (response.ok) {
+            const data = await response.json();
+            setYoutubeVideoUrl(data.videoUrl);
+          }
+        } catch (error) {
+          console.error('Error fetching YouTube video:', error);
         }
-      } catch (error) {
-        console.error('Error fetching YouTube video:', error);
-      }
-    };
+      };
 
-    fetchYoutubeVideo();
-  }, [name]);
+      fetchYoutubeVideo();
+    }
+  }, [name, youtubeVideoId]);
 
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
