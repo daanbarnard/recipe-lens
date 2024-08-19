@@ -25,13 +25,32 @@ export default function Home() {
   const cameraInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    const script = document.createElement('script')
-    script.src = `https://www.google.com/recaptcha/api.js?render=${process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}`
-    script.async = true
-    document.body.appendChild(script)
+    const loadRecaptcha = () => {
+      const script = document.createElement('script')
+      script.src = `https://www.google.com/recaptcha/api.js?render=${process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}`
+      script.async = true
+      script.defer = true
+      script.onload = () => {
+        console.log('reCAPTCHA script loaded successfully')
+      }
+      script.onerror = () => {
+        console.error('Failed to load reCAPTCHA script')
+      }
+      document.body.appendChild(script)
+    }
+
+    if (!document.querySelector('script[src^="https://www.google.com/recaptcha/api.js"]')) {
+      loadRecaptcha()
+    }
+
+    console.log('NEXT_PUBLIC_GOOGLE_API_KEY:', process.env.NEXT_PUBLIC_GOOGLE_API_KEY)
+    console.log('NEXT_PUBLIC_RECAPTCHA_SITE_KEY:', process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY)
 
     return () => {
-      document.body.removeChild(script)
+      const script = document.querySelector('script[src^="https://www.google.com/recaptcha/api.js"]')
+      if (script) {
+        document.body.removeChild(script)
+      }
     }
   }, [])
 
@@ -96,9 +115,14 @@ export default function Home() {
 
   const executeRecaptcha = async () => {
     return new Promise((resolve, reject) => {
-      window.grecaptcha.ready(() => {
-        window.grecaptcha.execute(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY, { action: 'submit' }).then(resolve, reject)
-      })
+      if (window.grecaptcha && window.grecaptcha.ready) {
+        window.grecaptcha.ready(() => {
+          window.grecaptcha.execute(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY, { action: 'submit' }).then(resolve, reject)
+        })
+      } else {
+        console.error('reCAPTCHA is not loaded')
+        reject(new Error('reCAPTCHA is not loaded'))
+      }
     })
   }
 
