@@ -14,7 +14,7 @@ declare global {
 
 export default function Home() {
   const [showOptions, setShowOptions] = useState(false)
-  const [recipeType, setRecipeType] = useState('')
+  const [recipeType, setRecipeType] = useState<'identify' | 'create'>('identify')
   const [recipe, setRecipe] = useState(null)
   const [loading, setLoading] = useState(false)
   const [uploadedImage, setUploadedImage] = useState('')
@@ -35,7 +35,7 @@ export default function Home() {
     }
   }, [])
 
-  const handleButtonClick = (type) => {
+  const handleButtonClick = (type: 'identify' | 'create') => {
     setRecipeType(type)
     setShowOptions(true)
     setRecipe(null)
@@ -85,7 +85,7 @@ export default function Home() {
 
   const resetApp = () => {
     setShowOptions(false)
-    setRecipeType('')
+    setRecipeType('identify')
     setRecipe(null)
     setLoading(false)
     setUploadedImage('')
