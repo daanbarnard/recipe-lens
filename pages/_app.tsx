@@ -31,6 +31,12 @@ function MyApp({ Component, pageProps }: AppProps) {
           gtag('config', 'G-7YYVRBJ7J6');
         `}
       </Script>
+      <Script
+        async
+        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1361426623128973"
+        crossOrigin="anonymous"
+        strategy="afterInteractive"
+      />
       <Header onReset={resetApp} />
       <main className="flex-grow">
         <Component {...pageProps} key={key} />
