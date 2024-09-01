@@ -76,7 +76,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
         }
       } catch (error) {
         console.error(`Error fetching Amazon products for ${item}:`, error);
-        setAmazonError(`Error fetching Amazon products: ${error.message}`);
+        setAmazonError(`Error fetching Amazon products: ${error instanceof Error ? error.message : 'Unknown error'}`);
         return [];
       }
     };
