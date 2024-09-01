@@ -1,6 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { FaPrint, FaTimes, FaWhatsapp, FaFacebookF, FaLinkedinIn, FaEnvelope, FaAmazon } from 'react-icons/fa';
+import { FaPrint, FaTimes, FaWhatsapp, FaFacebookF, FaLinkedinIn, FaEnvelope, FaAmazon, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
+import Image from 'next/image';
+
+interface AmazonProduct {
+  ASIN: string;
+  DetailPageURL: string;
+  Images: { Primary: { Medium: { URL: string } } };
+  ItemInfo: { Title: { DisplayValue: string } };
+  Offers: { Listings: [{ Price: { DisplayAmount: string } }] };
+}
+
+interface EquipmentProducts {
+  [key: string]: AmazonProduct[];
+}
 
 interface RecipeCardProps {
   name: string;
@@ -24,6 +37,9 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
   onClose
 }) => {
   const [youtubeVideoUrl, setYoutubeVideoUrl] = useState<string | null>(null);
+  const [amazonProducts, setAmazonProducts] = useState<EquipmentProducts>({});
+  const [amazonError, setAmazonError] = useState<string | null>(null);
+  const [currentSlide, setCurrentSlide] = useState<{ [key: string]: number }>({});
 
   useEffect(() => {
     if (youtubeVideoId) {
@@ -43,7 +59,46 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
 
       fetchYoutubeVideo();
     }
-  }, [name, youtubeVideoId]);
+
+    const fetchAmazonProducts = async (item: string): Promise<AmazonProduct[]> => {
+      try {
+        const searchQuery = item.split(' ').slice(0, 2).join(' '); // Use only the first two words
+        console.log(`Fetching Amazon products for: ${searchQuery}`);
+        const response = await fetch(`/api/amazon-products?query=${encodeURIComponent(searchQuery)}`);
+        if (response.ok) {
+          const data = await response.json();
+          console.log(`Amazon products for ${searchQuery}:`, data);
+          return data;
+        } else {
+          const errorData = await response.json();
+          console.error(`Error response for ${searchQuery}:`, errorData);
+          throw new Error(errorData.error || 'Failed to fetch Amazon products');
+        }
+      } catch (error) {
+        console.error(`Error fetching Amazon products for ${item}:`, error);
+        setAmazonError(`Error fetching Amazon products: ${error.message}`);
+        return [];
+      }
+    };
+
+    const fetchAllAmazonProducts = async () => {
+      setAmazonError(null);
+      const productsMap: EquipmentProducts = {};
+      for (const item of equipmentNeeded) {
+        const products = await fetchAmazonProducts(item);
+        if (products.length > 0) {
+          productsMap[item] = products;
+          setCurrentSlide(prev => ({ ...prev, [item]: 0 }));
+        }
+      }
+      setAmazonProducts(productsMap);
+      if (Object.keys(productsMap).length === 0 && !amazonError) {
+        setAmazonError('Unable to fetch product recommendations. Please try again later.');
+      }
+    };
+
+    fetchAllAmazonProducts();
+  }, [name, youtubeVideoId, equipmentNeeded]);
 
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
@@ -78,7 +133,6 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
   };
 
   const formatIngredient = (ingredient: string): string => {
-    // This regex matches numbers (including fractions) at the start of the string
     const numberRegex = /^(\d+(\s*\/\s*\d+)?(\s*-\s*\d+(\s*\/\s*\d+)?)?)/;
     const match = ingredient.match(numberRegex);
     
@@ -91,25 +145,12 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
     return ingredient;
   };
 
-  const getAmazonSearchUrl = (item: string): string => {
-    const searchQuery = encodeURIComponent(item);
-    return `https://www.amazon.com/s?k=${searchQuery}&tag=recipelens-20`;
-  };
-
-  const renderList = (items: string[], type: 'bullet' | 'number' | 'none', isEquipment: boolean = false, isIngredient: boolean = false) => (
+  const renderList = (items: string[], type: 'bullet' | 'number' | 'none', isIngredient: boolean = false) => (
     items && items.length > 0 ? (
       <ul className={`pl-5 ${type === 'bullet' ? 'list-disc' : type === 'number' ? 'list-decimal' : ''}`}>
         {items.map((item, index) => (
           <li key={index} className="mb-2">
-            {isEquipment ? (
-              <a href={getAmazonSearchUrl(cleanText(item))} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-                {cleanText(item)}
-              </a>
-            ) : isIngredient ? (
-              formatIngredient(item)
-            ) : (
-              cleanText(item)
-            )}
+            {isIngredient ? formatIngredient(item) : cleanText(item)}
           </li>
         ))}
       </ul>
@@ -132,6 +173,90 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
         ))}
       </div>
     ) : null
+  );
+
+  const handlePrevSlide = (equipment: string) => {
+    setCurrentSlide(prev => ({
+      ...prev,
+      [equipment]: (prev[equipment] - 1 + amazonProducts[equipment].length) % amazonProducts[equipment].length
+    }));
+  };
+
+  const handleNextSlide = (equipment: string) => {
+    setCurrentSlide(prev => ({
+      ...prev,
+      [equipment]: (prev[equipment] + 1) % amazonProducts[equipment].length
+    }));
+  };
+
+  const renderAmazonProducts = () => (
+    <div className="space-y-6">
+      {Object.entries(amazonProducts).map(([equipment, products]) => (
+        <div key={equipment} className="border rounded-lg p-4">
+          <h4 className="text-lg font-semibold mb-2">{equipment}</h4>
+          <div className="relative">
+            <div className="overflow-hidden">
+              <div className="flex transition-transform duration-300 ease-in-out" style={{ transform: `translateX(-${currentSlide[equipment] * 100}%)` }}>
+                {products.map((product, index) => (
+                  <div key={index} className="w-full flex-shrink-0 px-2">
+                    <div className="border rounded-lg p-4 flex flex-col items-center">
+                      <Image
+                        src={product.Images.Primary.Medium.URL}
+                        alt={product.ItemInfo.Title.DisplayValue}
+                        width={100}
+                        height={100}
+                        objectFit="contain"
+                      />
+                      <h3 className="text-sm font-semibold mt-2 text-center">{product.ItemInfo.Title.DisplayValue}</h3>
+                      <p className="text-lg font-bold mt-1">{product.Offers.Listings[0].Price.DisplayAmount}</p>
+                      <a
+                        href={product.DetailPageURL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2 bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded inline-flex items-center"
+                      >
+                        <FaAmazon className="mr-2" />
+                        View on Amazon
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {products.length > 1 && (
+              <>
+                <button
+                  className="absolute top-1/2 left-0 transform -translate-y-1/2 bg-white bg-opacity-50 hover:bg-opacity-75 rounded-full p-2"
+                  onClick={() => handlePrevSlide(equipment)}
+                >
+                  <FaChevronLeft />
+                </button>
+                <button
+                  className="absolute top-1/2 right-0 transform -translate-y-1/2 bg-white bg-opacity-50 hover:bg-opacity-75 rounded-full p-2"
+                  onClick={() => handleNextSlide(equipment)}
+                >
+                  <FaChevronRight />
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const renderBuyIngredientsButton = () => (
+    <div className="flex justify-center mt-4">
+      <a
+        href="https://amzn.to/4dHwfxy"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
+      >
+        <FaAmazon className="mr-2" />
+        Buy Ingredients on Amazon Fresh
+      </a>
+    </div>
   );
 
   const shareText = "Turn your photos into recipes with Recipe Lens! Snap a picture of your dish or ingredients, and our AI will create a delicious, personalized recipe for you. Explore culinary creativity at RecipeLens.com!";
@@ -162,30 +287,20 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
 
         <section className="mb-6">
           <h2 className="text-2xl font-semibold mb-2">Ingredients</h2>
-          {renderList(ingredients, 'bullet', false, true)}
-          <a
-            href="https://amzn.to/3YLQiGD"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-4 inline-flex items-center bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
-          >
-            <FaAmazon className="mr-2" />
-            Shop on Amazon Fresh
-          </a>
+          {renderList(ingredients, 'bullet', true)}
+          {renderBuyIngredientsButton()}
         </section>
 
         <section className="mb-6">
           <h2 className="text-2xl font-semibold mb-2">Equipment Needed</h2>
-          {renderList(equipmentNeeded, 'none', true)}
-          <a
-            href="https://amzn.to/3WRQTUH"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-4 inline-flex items-center bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
-          >
-            <FaAmazon className="mr-2" />
-            Shop Kitchen Supplies
-          </a>
+          {renderList(equipmentNeeded, 'none')}
+          {amazonError && <p className="text-yellow-500 mt-2">{amazonError}</p>}
+          {Object.keys(amazonProducts).length > 0 && (
+            <>
+              <h3 className="text-xl font-semibold mt-4 mb-2">Recommended Products</h3>
+              {renderAmazonProducts()}
+            </>
+          )}
         </section>
 
         <section className="mb-6">
