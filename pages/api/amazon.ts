@@ -169,7 +169,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.error('Axios error status:', error.response?.status);
       console.error('Axios error headers:', error.response?.headers);
     }
-    res.status(500).json({ error: 'Failed to fetch Amazon products', details: error.message, fallbackData: fallbackProducts });
+    res.status(500).json({ 
+      error: 'Failed to fetch Amazon products', 
+      details: error instanceof Error ? error.message : 'Unknown error',
+      fallbackData: fallbackProducts 
+    });
   }
 }
 
